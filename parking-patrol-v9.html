@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1B6CF2">
+<title>단속경로</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1B6CF2;--bg:#F2F4F8;--white:#fff;
+  --text:#111;--muted:#6B7280;--border:#E5E7EB;
+  --orange:#F97316;--green:#16A34A;--red:#DC2626;
+  --naver:#03C75A;--tmap:#E8002D;
+  --sh:0 2px 12px rgba(0,0,0,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100dvh}
+.hdr{background:var(--primary);flex-shrink:0;box-shadow:0 2px 8px rgba(27,108,242,.3)}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px}
+.hdr-title{font-size:18px;font-weight:900;color:#fff;letter-spacing:-.5px}
+.hdr-right{display:flex;align-items:center;gap:6px}
+.hdr-badge{background:rgba(255,255,255,.22);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px}
+.hdr-icon-btn{background:rgba(255,255,255,.18);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:10px 0;text-align:center;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s}
+.tab .ti{font-size:16px}
+.tab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.panel{display:none;padding:14px 14px 100px}
+.panel.on{display:block}
+.card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.loc-bar{display:flex;align-items:center;gap:10px}
+.loc-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;animation:lp 2s ease-in-out infinite}
+@keyframes lp{0%,100%{box-shadow:0 0 0 3px rgba(22,163,74,.2)}50%{box-shadow:0 0 0 6px rgba(22,163,74,.05)}}
+.loc-txt{flex:1;font-size:12px;color:var(--muted)}
+.loc-txt b{color:var(--text)}
+.sm-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.upload-zone{border:2px dashed #C7D7FB;border-radius:14px;padding:22px 16px;text-align:center;cursor:pointer;position:relative;transition:all .2s;background:#F7F9FF}
+.upload-zone.over{border-color:var(--primary);background:#EEF3FF}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.u-ico{font-size:32px;margin-bottom:6px}
+.u-ttl{font-size:14px;font-weight:700}
+.u-sub{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.img-strip{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.img-strip::-webkit-scrollbar{display:none}
+.img-wrap img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:2px solid var(--border)}
+.proc{display:none;align-items:center;gap:12px;padding:14px;background:#EEF3FF;border-radius:14px;margin-bottom:10px;border-left:4px solid var(--primary)}
+.proc.on{display:flex}
+.spin{width:24px;height:24px;border:3px solid #C7D7FB;border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-txt{font-size:13px;color:var(--primary);font-weight:600}
+.geo-bar{display:none;background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.geo-bar.on{display:block}
+.geo-bar-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.geo-prog{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden;margin-bottom:6px}
+.geo-prog-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s;width:0%}
+.geo-prog-txt{font-size:11px;color:var(--muted);text-align:right}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat{background:#fff;border-radius:12px;padding:12px 6px;text-align:center;box-shadow:var(--sh)}
+.sv{font-size:22px;font-weight:900;line-height:1}
+.sl{font-size:11px;color:var(--muted);margin-top:3px}
+.s-all .sv{color:var(--text)}
+.s-rem .sv{color:var(--orange)}
+.s-done .sv{color:var(--green)}
+.nav-selector{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.nav-sel-btn{border:2px solid var(--border);border-radius:12px;padding:12px 8px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;background:#fff;transition:all .15s}
+.nav-sel-btn .ns-ico{font-size:20px}
+.nav-sel-btn .ns-name{font-size:13px;font-weight:800;color:var(--muted)}
+.nav-sel-btn .ns-sub{font-size:10px;color:var(--muted)}
+.nav-sel-btn.on-naver{border-color:var(--naver);background:#F0FDF4}
+.nav-sel-btn.on-naver .ns-name{color:var(--naver)}
+.nav-sel-btn.on-tmap{border-color:var(--tmap);background:#FFF5F5}
+.nav-sel-btn.on-tmap .ns-name{color:var(--tmap)}
+.seg-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.seg-title{font-size:13px;font-weight:800}
+.seg-hint{font-size:11px;color:var(--muted)}
+.seg-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.seg-btn{border:none;border-radius:14px;padding:15px 16px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .15s;width:100%}
+.seg-btn:active{transform:scale(.97)}
+.seg-naver{background:var(--naver);color:#fff;box-shadow:0 3px 12px rgba(3,199,90,.3)}
+.seg-tmap{background:var(--tmap);color:#fff;box-shadow:0 3px 12px rgba(232,0,45,.3)}
+.seg-left{display:flex;align-items:center;gap:12px}
+.seg-circle{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);color:#fff;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.seg-label{font-size:14px;font-weight:800;text-align:left}
+.seg-sub{font-size:11px;opacity:.85;margin-top:2px;text-align:left;line-height:1.4}
+.seg-count{font-size:12px;font-weight:700;background:rgba(255,255,255,.25);padding:3px 8px;border-radius:10px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sec-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.4px}
+.sec-badge{background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.addr-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.addr-card{background:#fff;border-radius:13px;padding:12px 13px;display:flex;align-items:center;gap:11px;box-shadow:var(--sh);cursor:pointer;transition:transform .1s;position:relative;overflow:hidden}
+.addr-card:active{transform:scale(.985)}
+.addr-card.done{background:#F9FFF9;box-shadow:none;opacity:.6}
+.addr-card.done::after{content:'✓ 완료';position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--green);font-size:11px;font-weight:700;background:#DCFCE7;padding:3px 8px;border-radius:6px}
+.ob{width:33px;height:33px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;background:var(--primary)}
+.ob.ob-done{background:#DCFCE7;color:var(--green)}
+.ob.ob-first{background:var(--orange)}
+.a-body{flex:1;min-width:0}
+.a-addr{font-size:14px;font-weight:600;line-height:1.35}
+.a-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.chip{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-right:4px}
+.chip-proc{background:#FFF7ED;color:var(--orange)}
+.chip-recv{background:#EFF6FF;color:#2563EB}
+.done .a-addr{color:var(--muted);text-decoration:line-through}
+.act-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.act-btn{background:#fff;border:1.5px solid var(--border);color:var(--muted);border-radius:11px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px}
+.act-btn.red{color:var(--red);border-color:#FECACA}
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+.empty-ico{font-size:52px;margin-bottom:12px;opacity:.35}
+.empty-txt{font-size:14px;line-height:1.7}
+.s-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.s-input{width:100%;background:#F9FAFB;border:1.5px solid var(--border);color:var(--text);padding:11px 12px;border-radius:10px;font-size:14px;font-family:inherit;outline:none}
+.s-input:focus{border-color:var(--primary)}
+.s-btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:11px;width:100%;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}
+.warn-box{background:#FFFBEB;border:1px solid #FCD34D;border-radius:10px;padding:12px;font-size:12px;color:#92400E;line-height:1.6}
+.howto{display:flex;flex-direction:column;gap:10px}
+.hstep{display:flex;align-items:flex-start;gap:10px}
+.hnum{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:900;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.htxt{font-size:13px;line-height:1.45;padding-top:3px}
+.done-btn{background:#F0FDF4;color:var(--green);border:1.5px solid #86EFAC;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.undo-btn{background:#F9FAFB;color:var(--muted);border:1.5px solid var(--border);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+20px);left:50%;transform:translateX(-50%) translateY(60px);background:#111;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:9999;transition:transform .25s;max-width:88vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,0.2)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-in">
+    <div class="hdr-title">🚔 단속경로</div>
+    <div class="hdr-right">
+      <div class="hdr-badge" id="totalBadge">0건</div>
+      <button class="hdr-icon-btn" onclick="confirmReset()">🗑</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="gotoTab('route')"><span class="ti">📍</span>경로</div>
+    <div class="tab" onclick="gotoTab('list')"><span class="ti">📋</span>목록</div>
+    <div class="tab" onclick="gotoTab('install')"><span class="ti">📲</span>설치</div>
+    <div class="tab" onclick="gotoTab('settings')"><span class="ti">⚙️</span>설정</div>
+  </div>
+</div>
+<div class="body">
+
+  <div class="panel on" id="panel-route">
+    <div class="card" style="padding:11px 14px;margin-bottom:10px">
+      <div class="loc-bar">
+        <div class="loc-dot" id="locDot"></div>
+        <div class="loc-txt" id="locTxt">위치 확인 중...</div>
+        <button class="sm-btn" onclick="getLocation()">📡 갱신</button>
+      </div>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" accept="image/*" multiple id="fileInput" onchange="handleFiles(this.files)">
+        <div class="u-ico">📸</div>
+        <div class="u-ttl">민원 화면 사진 추가</div>
+        <div class="u-sub">여러 장 동시에 또는 나눠서 올려도 돼요<br>자동으로 합쳐지고 중복은 제거됩니다</div>
+      </div>
+    </div>
+    <div class="img-strip" id="imgStrip"></div>
+    <div class="proc" id="proc"><div class="spin"></div><div class="proc-txt" id="procTxt">AI가 주소를 분석 중...</div></div>
+    <div class="geo-bar" id="geoBar">
+      <div class="geo-bar-title">📍 주소 → 좌표 변환 중 (카카오 지오코딩)</div>
+      <div class="geo-prog"><div class="geo-prog-fill" id="geoFill"></div></div>
+      <div class="geo-prog-txt" id="geoTxt">0 / 0</div>
+    </div>
+    <div id="mainSection" style="display:none">
+      <div class="stats">
+        <div class="stat s-all"><div class="sv" id="sTotal">0</div><div class="sl">전체</div></div>
+        <div class="stat s-rem"><div class="sv" id="sRemain">0</div><div class="sl">남은곳</div></div>
+        <div class="stat s-done"><div class="sv" id="sDone">0</div><div class="sl">완료</div></div>
+      </div>
+      <div class="nav-selector">
+        <button class="nav-sel-btn on-naver" id="sel-naver" onclick="selectNav('naver')">
+          <span class="ns-ico">🟢</span><span class="ns-name">네이버지도</span><span class="ns-sub">5개씩 구간</span>
+        </button>
+        <button class="nav-sel-btn" id="sel-tmap" onclick="selectNav('tmap')">
+          <span class="ns-ico">🔴</span><span class="ns-name">T맵</span><span class="ns-sub">4개씩 구간</span>
+        </button>
+      </div>
+      <div class="seg-hdr">
+        <div class="seg-title" id="segTitle">🟢 네이버지도 구간별 경로</div>
+        <div class="seg-hint" id="segHint">5개씩 · 순서대로</div>
+      </div>
+      <div class="seg-list" id="segList"></div>
+      <div class="sec-hdr">
+        <div class="sec-title">방문 순서 전체 목록</div>
+        <div class="sec-badge" id="remainBadge">0건</div>
+      </div>
+      <div class="addr-list" id="addrList"></div>
+      <div class="act-row">
+        <button class="act-btn" onclick="reoptimize()">🔄 경로 재정렬</button>
+        <button class="act-btn red" onclick="confirmReset()">🗑 오늘 초기화</button>
+      </div>
+    </div>
+    <div id="emptyState" class="empty">
+      <div class="empty-ico">📋</div>
+      <div class="empty-txt">민원 앱 화면을 찍은<br>사진을 올려주세요<br><br>여러 장 나눠서 올려도<br>자동으로 합쳐줘요</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-list">
+    <div class="sec-hdr" style="margin-bottom:10px">
+      <div class="sec-title">전체 민원 목록</div>
+      <div class="sec-badge" id="listBadge">0건</div>
+    </div>
+    <div id="fullList" class="addr-list"></div>
+    <div id="listEmpty" class="empty"><div class="empty-ico">📭</div><div class="empty-txt">아직 민원이 없어요</div></div>
+  </div>
+
+  <div class="panel" id="panel-install">
+    <div class="card">
+      <div class="s-lbl" style="font-size:15px;color:var(--primary);margin-bottom:14px">📲 앱처럼 설치하는 방법</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="font-size:13px">크롬으로 이 주소 열기<br><b style="font-size:11px;word-break:break-all">https://david-sw-lab.github.io/parking-patrol_/parking-patrol-v9.html</b></div></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div><div style="font-size:13px">크롬 <b>⋮ 메뉴 → 홈 화면에 추가</b></div></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0"><div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="font-size:13px">홈화면에 <b>🚔 단속경로</b> 아이콘 생성!</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="s-lbl">내비 앱 설치</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="https://play.google.com/store/apps/details?id=com.nhn.android.nmap" target="_blank" style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1px solid #86EFAC;border-radius:10px;padding:12px;text-decoration:none;color:var(--text)">
+          <span style="font-size:22px">🟢</span><div><div style="font-size:14px;font-weight:700">네이버지도</div><div style="font-size:11px;color:var(--muted)">Play 스토어</div></div><span style="margin-left:auto">›</span>
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=com.skt.tmap.ku" target="_blank" style="display:flex;align-items:center;gap:12px;background:#FFF5F5;border:1px solid #FECACA;border-radius:10px;padding:12px;text-decoration:none;color:var(--text)">
+          <span style="font-size:22px">🔴</span><div><div style="font-size:14px;font-weight:700">T맵</div><div style="font-size:11px;color:var(--muted)">Play 스토어</div></div><span style="margin-left:auto">›</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-settings">
+    <div class="warn-box" style="margin-bottom:10px">⚠️ <b>Claude API 키 필요</b><br>console.anthropic.com → API Keys에서 발급.<br>키는 이 기기에만 저장됩니다.</div>
+    <div class="card">
+      <div class="s-lbl">🔑 Claude API Key</div>
+      <input type="password" class="s-input" id="apiKeyInput" placeholder="sk-ant-api03-...">
+      <button class="s-btn" onclick="saveKey()">저장하기</button>
+    </div>
+    <div class="card">
+      <div class="s-lbl">🗺 카카오 REST API Key <span style="background:#DCFCE7;color:var(--green);font-size:10px;padding:2px 6px;border-radius:4px;margin-left:4px">내장됨</span></div>
+      <input type="text" class="s-input" value="93ebfac81d7c2fb47360348953a68837" readonly style="font-family:monospace;font-size:12px;color:var(--muted)">
+    </div>
+    <div class="card">
+      <div class="s-lbl">📖 사용 방법</div>
+      <div class="howto">
+        <div class="hstep"><div class="hnum">1</div><div class="htxt">사진 추가 → Claude AI 주소 추출 → 카카오 좌표 변환</div></div>
+        <div class="hstep"><div class="hnum">2</div><div class="htxt">🟢 네이버 또는 🔴 T맵 선택</div></div>
+        <div class="hstep"><div class="hnum">3</div><div class="htxt">구간 버튼 순서대로 탭 → 경유지 자동 입력</div></div>
+        <div class="hstep"><div class="hnum">4</div><div class="htxt">다음날 🗑 초기화</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <button onclick="confirmReset()" style="background:#FEF2F2;color:var(--red);border:1.5px solid #FECACA;border-radius:10px;padding:11px;width:100%;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🗑 오늘 데이터 전체 초기화</button>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KAKAO_KEY = '93ebfac81d7c2fb47360348953a68837';
+const S = { addrs:[], lat:null, lng:null, nav:'naver' };
+
+(function(){
+  try{ const d=JSON.parse(localStorage.getItem('pp')||'{}'); S.addrs=d.a||[]; S.nav=d.nav||'naver'; }catch(e){}
+  const k=localStorage.getItem('pp_k'); if(k) document.getElementById('apiKeyInput').value=k;
+  const ld=localStorage.getItem('pp_d'), td=new Date().toDateString();
+  if(ld&&ld!==td&&S.addrs.length) setTimeout(()=>{ if(confirm('새로운 날이에요!\n어제 데이터를 초기화할까요?')) resetData(); },600);
+  localStorage.setItem('pp_d',td);
+  updateNavUI(); getLocation(); render();
+})();
+
+function selectNav(nav){ S.nav=nav; save(); updateNavUI(); renderSegments(); }
+function updateNavUI(){
+  const isN=S.nav==='naver';
+  document.getElementById('sel-naver').className='nav-sel-btn'+(isN?' on-naver':'');
+  document.getElementById('sel-tmap').className='nav-sel-btn'+(isN?'':' on-tmap');
+  document.getElementById('segTitle').textContent=isN?'🟢 네이버지도 구간별 경로':'🔴 T맵 구간별 경로';
+  document.getElementById('segHint').textContent=isN?'5개씩 · 순서대로':'4개씩 · 순서대로';
+}
+function segSize(){ return S.nav==='naver'?5:4; }
+
+function getLocation(){
+  const dot=document.getElementById('locDot'),txt=document.getElementById('locTxt');
+  dot.style.background='#FBBF24'; txt.innerHTML='위치 확인 중...';
+  if(!navigator.geolocation){txt.innerHTML='위치 사용 불가';return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    S.lat=p.coords.latitude; S.lng=p.coords.longitude;
+    dot.style.background='var(--green)';
+    txt.innerHTML='<b>위치 확인됨</b> · 최적 경로 계산 완료';
+    if(S.addrs.length) optimizeRoute();
+  },()=>{dot.style.background='#F87171';txt.innerHTML='위치 권한 없음 · 시간순 정렬';},{enableHighAccuracy:true,timeout:8000});
+}
+
+function handleFiles(files){
+  const k=localStorage.getItem('pp_k');
+  if(!k){toast('⚠️ 설정 탭에서 Claude API 키를 먼저 입력해주세요');gotoTab('settings');return;}
+  if(!files.length) return;
+  showProc(true,`AI가 사진 ${files.length}장 분석 중...`);
+  Promise.all(Array.from(files).map(readFile)).then(imgs=>{
+    imgs.forEach(img=>{
+      const wrap=document.createElement('div');wrap.className='img-wrap';
+      const el=document.createElement('img');el.src=img.prev;
+      wrap.appendChild(el);document.getElementById('imgStrip').appendChild(wrap);
+    });
+    extractAddrs(imgs,k);
+  });
+  document.getElementById('fileInput').value='';
+}
+
+function readFile(f){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=1600;let w=img.width,h=img.height;
+        if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        const comp=c.toDataURL('image/jpeg',0.82);
+        const data=comp.split(',')[1];
+        if(data.length*0.75>4*1024*1024){const c2=c.toDataURL('image/jpeg',0.6);res({prev:c2,data:c2.split(',')[1],mime:'image/jpeg'});}
+        else res({prev:comp,data,mime:'image/jpeg'});
+      };
+      img.onerror=rej;img.src=e.target.result;
+    };
+    r.onerror=rej;r.readAsDataURL(f);
+  });
+}
+
+async function extractAddrs(imgs,key){
+  try{
+    const content=[
+      ...imgs.map(i=>({type:'image',source:{type:'base64',media_type:i.mime,data:i.data}})),
+      {type:'text',text:`주차단속 민원 앱 화면입니다. 모든 민원 주소를 추출하세요.
+JSON만 응답(백틱 없이):
+{"addresses":[{"id":"26-00299097","address":"서울 마포구 대흥동 25-18","status":"처리중","assignTime":"20260303160400"}]}
+- address: 완전한 주소 (앞에 "서울" 붙이기)
+- 동 이름만 있으면 "서울 마포구" 붙이기
+- 같은 ID 중복 제외`}
+    ];
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:3000,messages:[{role:'user',content}]})
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
+    const data=await r.json();
+    const raw=data.content.map(c=>c.text||'').join('').replace(/```[a-z]*|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+
+    let added=0, dupes=0;
+    const newAddrs=[];
+    (parsed.addresses||[]).forEach(a=>{
+      // 강화된 중복 체크: ID 중복 OR 정규화 주소 중복 OR 번지 기반 중복
+      const isDupExisting = S.addrs.some(x=>
+        (a.id && x.id===a.id) ||
+        norm(x.address)===norm(a.address) ||
+        addrKey(x.address)===addrKey(a.address)
+      );
+      // 이번 배치 내 중복도 체크
+      const isDupNew = newAddrs.some(x=>
+        (a.id && x.id===a.id) ||
+        norm(x.address)===norm(a.address) ||
+        addrKey(x.address)===addrKey(a.address)
+      );
+      if(isDupExisting||isDupNew){dupes++;return;}
+      newAddrs.push({...a,done:false,lat:null,lng:null});
+      added++;
+    });
+
+    showProc(false);
+    if(!newAddrs.length){toast(`중복 ${dupes}건 제외 · 새 주소 없음`);return;}
+    toast(`✅ ${added}건 추출 (중복 ${dupes}건 제외) · 좌표 변환 중...`);
+    await geocodeAll(newAddrs);
+    S.addrs.push(...newAddrs);
+    save();optimizeRoute();render();
+    toast(`📍 ${added}건 추가! 총 ${S.addrs.length}건`);
+  }catch(e){showProc(false);toast('❌ 분석 실패: '+e.message);}
+}
+
+// 주소 핵심 키 추출 - "동번지" 기반 비교
+// 예: "서울 마포구 공덕동 460-2" → "공덕동460-2"
+// 예: "서울특별시 마포구 공덕동 460-2" → "공덕동460-2"
+function addrKey(s){
+  if(!s) return '';
+  // 동/로/길 + 번호 패턴 추출
+  const m = s.match(/([가-힣]+(?:동|로|길))\s*([\d\-]+)/);
+  if(m) return m[1]+m[2].replace(/\s/g,'');
+  return norm(s);
+}
+
+async function geocodeAll(addrs){
+  const bar=document.getElementById('geoBar'),fill=document.getElementById('geoFill'),txt=document.getElementById('geoTxt');
+  bar.classList.add('on');
+  for(let i=0;i<addrs.length;i++){
+    txt.textContent=`${i+1} / ${addrs.length}`;
+    fill.style.width=`${((i+1)/addrs.length)*100}%`;
+    try{const res=await kakaoGeocode(addrs[i].address);if(res){addrs[i].lat=res.lat;addrs[i].lng=res.lng;}}
+    catch(e){console.warn('geocode fail:',addrs[i].address);}
+    await new Promise(r=>setTimeout(r,120));
+  }
+  bar.classList.remove('on');
+}
+
+async function kakaoGeocode(address){
+  const h={'Authorization':'KakaoAK '+KAKAO_KEY};
+  const r=await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${enc(address)}`,{headers:h});
+  if(r.ok){const d=await r.json();if(d.documents?.length)return{lat:parseFloat(d.documents[0].y),lng:parseFloat(d.documents[0].x)};}
+  const r2=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${enc(address)}`,{headers:h});
+  if(r2.ok){const d=await r2.json();if(d.documents?.length)return{lat:parseFloat(d.documents[0].y),lng:parseFloat(d.documents[0].x)};}
+  return null;
+}
+
+function optimizeRoute(){
+  const p=S.addrs.filter(a=>!a.done),d=S.addrs.filter(a=>a.done);
+  const geo=p.filter(a=>a.lat&&a.lng),noGeo=p.filter(a=>!a.lat||!a.lng);
+  if(geo.length>1){
+    const sLat=S.lat||geo[0].lat,sLng=S.lng||geo[0].lng;
+    S.addrs=[...nearestNeighbor(geo,sLat,sLng),...noGeo,...d];
+  }else{p.sort((a,b)=>(a.assignTime||'').localeCompare(b.assignTime||''));S.addrs=[...p,...d];}
+  render();
+}
+function nearestNeighbor(pts,sLat,sLng){
+  const unv=[...pts],res=[];let cLat=sLat,cLng=sLng;
+  while(unv.length){let mi=Infinity,mIdx=0;unv.forEach((p,i)=>{const d=(p.lat-cLat)**2+(p.lng-cLng)**2;if(d<mi){mi=d;mIdx=i;}});const n=unv.splice(mIdx,1)[0];res.push(n);cLat=n.lat;cLng=n.lng;}
+  return res;
+}
+function reoptimize(){getLocation();toast('📡 위치 재확인 중...');}
+
+function launchSegment(segIdx){
+  const SZ=segSize();
+  const pending=S.addrs.filter(a=>!a.done);
+  const seg=pending.slice(segIdx*SZ, segIdx*SZ+SZ);
+  if(!seg.length){toast('이 구간은 이미 완료됐어요!');return;}
+
+  const geo=seg.filter(a=>a.lat&&a.lng);
+  if(!geo.length){
+    const dest=seg[0];
+    window.location.href=S.nav==='naver'
+      ?`nmap://search?query=${enc(dest.address)}&appname=com.parking.patrol`
+      :`tmap://search?name=${enc(dest.address)}`;
+    cp(seg.map((a,i)=>`${segIdx*SZ+i+1}. ${a.address}`).join('\n'));
+    toast('⚠️ 좌표 없음 · 검색으로 열기');return;
+  }
+
+  const dest=geo[geo.length-1];
+  const vias=geo.slice(0,-1);
+  let url='';
+
+  if(S.nav==='naver'){
+    url='nmap://route/car?';
+    if(S.lat&&S.lng) url+=`slat=${S.lat}&slng=${S.lng}&sname=${enc('현재위치')}&`;
+    vias.forEach((v,i)=>{ url+=`v${i+1}lat=${v.lat}&v${i+1}lng=${v.lng}&v${i+1}name=${enc(v.address)}&`; });
+    url+=`dlat=${dest.lat}&dlng=${dest.lng}&dname=${enc(dest.address)}&appname=com.parking.patrol`;
+  } else {
+    url='tmap://route?';
+    if(S.lat&&S.lng) url+=`startx=${S.lng}&starty=${S.lat}&`;
+    vias.forEach((v,i)=>{ url+=`via${i+1}x=${v.lng}&via${i+1}y=${v.lat}&via${i+1}name=${enc(v.address)}&`; });
+    url+=`goalx=${dest.lng}&goaly=${dest.lat}&goalname=${enc(dest.address)}`;
+  }
+
+  window.location.href = url;
+  cp(seg.map((a,i)=>`${segIdx*SZ+i+1}. ${a.address}`).join('\n'));
+  const emoji=S.nav==='naver'?'🟢':'🔴';
+  toast(`${emoji} 구간${segIdx+1} 실행! · 주소 복사됨`);
+}
+
+function cardTap(id){
+  const a=S.addrs.find(x=>x.id===id);if(!a||a.done)return;
+  const navName=S.nav==='naver'?'네이버지도':'T맵';
+  const go=confirm(`📍 ${a.address}\n\n[확인] ${navName}으로 이동\n[취소] 완료 처리`);
+  if(go){
+    if(S.nav==='naver'){
+      window.location.href=a.lat&&a.lng
+        ?`nmap://route/car?dlat=${a.lat}&dlng=${a.lng}&dname=${enc(a.address)}&appname=com.parking.patrol`
+        :`nmap://search?query=${enc(a.address)}&appname=com.parking.patrol`;
+    }else{
+      window.location.href=a.lat&&a.lng
+        ?`tmap://route?goalx=${a.lng}&goaly=${a.lat}&goalname=${enc(a.address)}`
+        :`tmap://search?name=${enc(a.address)}`;
+    }
+  }else{toggleDone(id);}
+}
+
+function toggleDone(id){const a=S.addrs.find(x=>x.id===id);if(a){a.done=!a.done;save();optimizeRoute();}}
+
+function render(){
+  const total=S.addrs.length,done=S.addrs.filter(a=>a.done).length,rem=total-done;
+  document.getElementById('totalBadge').textContent=total+'건';
+  document.getElementById('mainSection').style.display=total?'block':'none';
+  document.getElementById('emptyState').style.display=total?'none':'block';
+  document.getElementById('sTotal').textContent=total;
+  document.getElementById('sRemain').textContent=rem;
+  document.getElementById('sDone').textContent=done;
+  document.getElementById('remainBadge').textContent=rem+'건 남음';
+  document.getElementById('listBadge').textContent=total+'건';
+  renderSegments();renderCards();renderFullList();
+}
+
+function renderSegments(){
+  const SZ=segSize(),isN=S.nav==='naver';
+  const pending=S.addrs.filter(a=>!a.done);
+  const container=document.getElementById('segList');
+  if(!pending.length){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--green);font-weight:700">🎉 모든 민원 완료!</div>';return;}
+  const segs=[];
+  for(let i=0;i<pending.length;i+=SZ) segs.push(pending.slice(i,i+SZ));
+  container.innerHTML=segs.map((seg,idx)=>{
+    const preview=seg.slice(0,2).map(a=>{
+      let s=a.address.replace('서울특별시','서울').replace('서울 마포구','마포구');
+      return s.length>16?s.slice(0,16)+'...':s;
+    }).join(', ')+(seg.length>2?` 외 ${seg.length-2}곳`:'');
+    const cls=isN?'seg-naver':'seg-tmap';
+    const emoji=isN?'🟢':'🔴';
+    return `<button class="seg-btn ${cls}" onclick="launchSegment(${idx})">
+      <div class="seg-left">
+        <div class="seg-circle">${idx+1}</div>
+        <div>
+          <div class="seg-label">${emoji} 구간 ${idx+1} · ${seg.length}곳</div>
+          <div class="seg-sub">${preview}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+        <div class="seg-count">${seg.length}개</div>
+        <div style="font-size:10px;opacity:.8">탭해서 실행</div>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function renderCards(){
+  const p=S.addrs.filter(a=>!a.done),d=S.addrs.filter(a=>a.done),SZ=segSize();
+  document.getElementById('addrList').innerHTML=[...p,...d].map(a=>{
+    const pi=p.indexOf(a),ol=a.done?'✓':(pi+1);
+    const bc=a.done?'ob-done':pi===0?'ob-first':'';
+    const cc=a.status==='처리중'?'chip-proc':'chip-recv';
+    const segTag=!a.done&&pi>=0?`<span style="background:#EEF3FF;color:var(--primary);font-size:9px;font-weight:900;padding:1px 5px;border-radius:4px;margin-right:4px">구간${Math.floor(pi/SZ)+1}</span>`:'';
+    return `<div class="addr-card ${a.done?'done':''}" onclick="cardTap('${a.id}')">
+      <div class="ob ${bc}">${ol}</div>
+      <div class="a-body">
+        <div class="a-addr">${a.address}</div>
+        <div class="a-meta">${segTag}<span class="chip ${cc}">${a.status||'접수'}</span>${a.id||''} ${ft(a.assignTime)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFullList(){
+  const el=document.getElementById('fullList'),em=document.getElementById('listEmpty');
+  if(!S.addrs.length){el.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  el.innerHTML=S.addrs.map((a,i)=>{
+    const cc=a.status==='처리중'?'chip-proc':'chip-recv';
+    return `<div class="addr-card ${a.done?'done':''}">
+      <div class="ob ${a.done?'ob-done':''}" style="font-size:12px">${i+1}</div>
+      <div class="a-body">
+        <div class="a-addr">${a.address}</div>
+        <div class="a-meta"><span class="chip ${cc}">${a.status||'접수'}</span>${a.id||''} ${ft(a.assignTime)}</div>
+      </div>
+      <button class="${a.done?'undo-btn':'done-btn'}" onclick="event.stopPropagation();toggleDone('${a.id}')">
+        ${a.done?'↩ 취소':'✓ 완료'}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function ft(t){if(!t||t.length<12)return'';return`${t.slice(8,10)}:${t.slice(10,12)}`;}
+function norm(s){return(s||'').replace(/\s+/g,'').replace(/[^\w가-힣]/g,'').toLowerCase();}
+function enc(s){return encodeURIComponent(s||'');}
+function gotoTab(t){
+  ['route','list','install','settings'].forEach((x,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('on',x===t);
+    document.getElementById('panel-'+x).classList.toggle('on',x===t);
+  });
+}
+function showProc(show,txt){document.getElementById('proc').classList.toggle('on',show);if(txt)document.getElementById('procTxt').textContent=txt;}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3500);}
+function saveKey(){const k=document.getElementById('apiKeyInput').value.trim();if(!k){toast('API 키를 입력해주세요');return;}localStorage.setItem('pp_k',k);toast('✅ Claude API 키 저장됨');}
+function save(){localStorage.setItem('pp',JSON.stringify({a:S.addrs,nav:S.nav}));}
+function confirmReset(){if(confirm('오늘 민원 데이터를 모두 초기화할까요?'))resetData();}
+function resetData(){S.addrs=[];save();render();document.getElementById('imgStrip').innerHTML='';toast('✅ 초기화 완료');}
+function cp(text){if(navigator.clipboard)navigator.clipboard.writeText(text).catch(()=>cpFb(text));else cpFb(text);}
+function cpFb(text){const el=Object.assign(document.createElement('textarea'),{value:text});el.style.cssText='position:fixed;opacity:0';document.body.appendChild(el);el.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(el);}
+
+const uz=document.getElementById('uploadZone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('over');});
+uz.addEventListener('dragleave',()=>uz.classList.remove('over'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('over');handleFiles(e.dataTransfer.files);});
+</script>
+</body>
+</html>
